@@ -1,9 +1,9 @@
 import React from 'react';
 
-export function Approve({ approve }) {
+export function Deposit({ deposit }) {
   return (
     <div>
-      <h4>Approve</h4>
+      <h4>Deposit</h4>
       <form
         onSubmit={(event) => {
           // This function just calls the transferTokens callback with the
@@ -11,24 +11,13 @@ export function Approve({ approve }) {
           event.preventDefault();
 
           const formData = new FormData(event.target);
-          const contractAddress = formData.get('contractAddress');
           const amount = formData.get('amount');
 
-          if (contractAddress && amount) {
-            approve(contractAddress, amount);
+          if (amount) {
+            deposit(amount);
           }
         }}
       >
-        <div className="form-group">
-          <label>Contract Address</label>
-          <input
-            className="form-control"
-            type="text"
-            name="contractAddress"
-            placeholder="Specify your own address temporarily."
-            required
-          />
-        </div>
         <div className="form-group">
           <label>Amount</label>
           <input
@@ -41,7 +30,7 @@ export function Approve({ approve }) {
           />
         </div>
         <div className="form-group">
-          <input className="btn btn-primary" type="submit" value="Approve" />
+          <input className="btn btn-primary" type="submit" value="Deposit" />
         </div>
       </form>
     </div>

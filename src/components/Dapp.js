@@ -8,6 +8,7 @@ import { NoWalletDetected } from './NoWalletDetected';
 import { ConnectWallet } from './ConnectWallet';
 import { TransactionErrorMessage } from './TransactionErrorMessage';
 import { WaitingForTransactionMessage } from './WaitingForTransactionMessage';
+import { Deposit } from './Deposit';
 import { Approve } from './Approve';
 
 // This is an error code that indicates that the user canceled a transaction
@@ -81,6 +82,13 @@ export class Dapp extends React.Component {
             )}
           </div>
         </div>
+        {/* Deposit */}
+        <div className="row">
+          <div className="col-12">
+            <Deposit deposit={(amount) => this._deposit(amount)} />
+          </div>
+        </div>
+        <hr />
         {/* Approve */}
         <div className="row">
           <div className="col-12">
@@ -145,11 +153,36 @@ export class Dapp extends React.Component {
     this.setState({ wethAllowance: allowance });
   }
 
+  async _deposit(amount) {
+    this._dismissTransactionError();
+
+    const wei = this._web3.utils.toWei(amount.toString(), 'ether');
+    await this._weth.methods
+      .deposit()
+      .send({ from: this.state.selectedAddress, value: wei })
+      .on('transactionHash', (hash) => {
+        this.setState({ txBeingSent: hash });
+      })
+      .on('receipt', () => {
+        this.setState({ txBeingSent: undefined });
+      })
+      .on('error', (e) => {
+        if (e.code === ERROR_CODE_TX_REJECTED_BY_USER) {
+          return;
+        }
+        console.error(e);
+        this.setState({ transactionError: e });
+      });
+    this.setState({ txBeingSent: undefined });
+    this._getWETHBalance();
+  }
+
   async _approve(contractAddress, amount) {
     this._dismissTransactionError();
 
+    const wei = this._web3.utils.toWei(amount.toString(), 'ether');
     await this._weth.methods
-      .approve(contractAddress, amount)
+      .approve(contractAddress, wei)
       .send({ from: this.state.selectedAddress })
       .on('transactionHash', (hash) => {
         this.setState({ txBeingSent: hash });
@@ -165,6 +198,7 @@ export class Dapp extends React.Component {
         this.setState({ transactionError: e });
       });
     this.setState({ txBeingSent: undefined });
+    this._getWETHAllowance(contractAddress);
   }
 
   // This method just clears part of the state.
