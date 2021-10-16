@@ -3,7 +3,6 @@ import React from 'react';
 export function Allowance({ allowance }) {
   return (
     <div>
-      <h4>Allowance</h4>
       <form
         onSubmit={(event) => {
           // This function just calls the transferTokens callback with the

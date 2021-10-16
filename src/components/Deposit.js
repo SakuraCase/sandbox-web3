@@ -3,7 +3,6 @@ import React from 'react';
 export function Deposit({ deposit }) {
   return (
     <div>
-      <h4>Deposit</h4>
       <form
         onSubmit={(event) => {
           // This function just calls the transferTokens callback with the
