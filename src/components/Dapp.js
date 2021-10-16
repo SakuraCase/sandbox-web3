@@ -10,6 +10,7 @@ import { TransactionErrorMessage } from './TransactionErrorMessage';
 import { WaitingForTransactionMessage } from './WaitingForTransactionMessage';
 import { Deposit } from './Deposit';
 import { Approve } from './Approve';
+import { Allowance } from './Allowance';
 
 // This is an error code that indicates that the user canceled a transaction
 const ERROR_CODE_TX_REJECTED_BY_USER = 4001;
@@ -52,8 +53,6 @@ export class Dapp extends React.Component {
           <div className="col-12">
             <p> address: {this.state.selectedAddress}</p>
             <p> network: {this.state.network} </p>
-            <p> weth: {this.state.wethBalance} </p>
-            <p> weth allowance: {this.state.wethAllowance} </p>
           </div>
         </div>
 
@@ -61,19 +60,9 @@ export class Dapp extends React.Component {
 
         <div className="row">
           <div className="col-12">
-            {/* 
-              Sending a transaction isn't an immidiate action. You have to wait
-              for it to be mined.
-              If we are waiting for one, we show a message here.
-            */}
             {this.state.txBeingSent && (
               <WaitingForTransactionMessage txHash={this.state.txBeingSent} />
             )}
-
-            {/* 
-              Sending a transaction can fail in multiple ways. 
-              If that happened, we show a message here.
-            */}
             {this.state.transactionError && (
               <TransactionErrorMessage
                 message={this._getRpcErrorMessage(this.state.transactionError)}
@@ -82,23 +71,33 @@ export class Dapp extends React.Component {
             )}
           </div>
         </div>
-        {/* Deposit */}
-        <div className="row">
-          <div className="col-12">
-            <Deposit deposit={(amount) => this._deposit(amount)} />
+        {/* weth */}
+        {contractAddress[this.state.network].weth && (
+          <div className="row">
+            <div className="col-12 bg-info text-white">
+              <p> weth: {this.state.wethBalance} </p>
+              <p> weth allowance: {this.state.wethAllowance} </p>
+            </div>
+            <div className="col-12">
+              <Deposit deposit={(amount) => this._deposit(amount)} />
+            </div>
+            <div className="col-12">
+              <Approve
+                approve={(contractAddress, amount) =>
+                  this._approve(contractAddress, amount)
+                }
+              />
+            </div>
+            <div className="col-12">
+              <Allowance
+                allowance={(contractAddress) =>
+                  this._getWETHAllowance(contractAddress)
+                }
+              />
+            </div>
+            <hr />
           </div>
-        </div>
-        <hr />
-        {/* Approve */}
-        <div className="row">
-          <div className="col-12">
-            <Approve
-              approve={(contractAddress, amount) =>
-                this._approve(contractAddress, amount)
-              }
-            />
-          </div>
-        </div>
+        )}
       </div>
     );
   }
@@ -125,17 +124,18 @@ export class Dapp extends React.Component {
       network: window.ethereum.networkVersion,
     });
     this._web3 = new Web3(Web3.givenProvider || 'ws://localhost:8545');
-    this._weth = new this._web3.eth.Contract(
-      WETHAbi,
-      contractAddress[this.state.network].weth
-    );
 
-    try {
-      this._getWETHBalance();
-      const tmp = this.state.selectedAddress;
-      this._getWETHAllowance(tmp);
-    } catch (e) {
-      console.log(e);
+    // weth
+    if (contractAddress[this.state.network].weth) {
+      this._weth = new this._web3.eth.Contract(
+        WETHAbi,
+        contractAddress[this.state.network].weth
+      );
+      try {
+        this._getWETHBalance();
+      } catch (e) {
+        console.log(e);
+      }
     }
   }
 
