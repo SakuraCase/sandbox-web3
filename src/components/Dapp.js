@@ -76,6 +76,16 @@ export class Dapp extends React.Component {
           <div className="col-12">
             <p> address: {this.state.selectedAddress}</p>
             <p> network: {this.state.network} </p>
+            <select
+              defaultValue={this.state.network}
+              onChange={(e) => this._switchNetwork(e.target.value)}
+            >
+              {Object.keys(contractAddress).map((v) => (
+                <option key={v} value={v}>
+                  {v}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
         <hr />
@@ -156,6 +166,15 @@ export class Dapp extends React.Component {
       this._resetState();
       this._initialize();
     });
+  }
+
+  async _switchNetwork(id) {
+    await this._web3.currentProvider
+      .request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: this._web3.utils.toHex(id) }],
+      })
+      .catch((e) => console.log(e.message));
   }
 
   async _initialize() {
